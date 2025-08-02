@@ -1,19 +1,23 @@
 # Unity-Logs-Viewer
 
 
-Please note with new unity you can view device logs on editor console window, check the new attach menu in editor console window.
+Please note that with the new Unity you can view device logs on the editor console window.  
+Check the new attach menu in the editor console window.
 
 
-Using this tool you can easily check your editor console logs inside the game itself! 
-All what you have to do is to make a circle gesture using your mouse (click and drag) or your finger (touch and drag) on the mobile screen to show all these logs! 
+Using this tool you can easily check your editor console logs inside the game itself!  
+All what you have to do is to make a circle gesture using your mouse (click and drag)  
+or your finger (touch and drag) on the mobile screen to show all these logs! 
 
-You can download also from unity asset store
-https://www.assetstore.unity3d.com/en/#!/content/12047
+~~You can download also from unity asset store~~  
+~~https://www.assetstore.unity3d.com/en/#!/content/12047~~  
 
-
+Assetstore version is outdated, does not support the new input system.
+<br/>
+<br/>
 #### To setup log viewer do the following
-    1 - create reporter from menu (Reporter->Create) at first scene your game start.
-    2 - then set the ” Scrip execution order ” in (Edit -> Project Settings ) of Reporter.cs to be the highest.
+    1 - Create reporter from menu (Reporter->Create) at the first scene your game starts.
+    2 - Then set the 'Script execution order' in (Edit -> Project Settings) of Reporter.cs to be the highest.
 
 ### Version 1.9
     - Migrated to New Input System
