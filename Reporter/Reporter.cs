@@ -15,10 +15,15 @@
 //use UNITY_CHANGE3 for unity 5.3 (fix for new SceneManger system)
 //use UNITY_CHANGE4 for unity 2018.3 (Networking system)
 
-using UnityEngine;
-using System.IO;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 #if UNITY_CHANGE3
 using UnityEngine.SceneManagement;
 #endif
@@ -27,7 +32,7 @@ using UnityEngine.Networking;
 #endif
 
 
-[System.Serializable]
+[Serializable]
 public class Images
 {
 	public Texture2D clearImage;
@@ -44,7 +49,6 @@ public class Images
     public Texture2D saveLogsImage; 
     public Texture2D searchImage;
     public Texture2D copyImage;
-    public Texture2D copyAllImage;
     public Texture2D closeImage;
 
 	public Texture2D buildFromImage;
@@ -192,7 +196,6 @@ public class Reporter : MonoBehaviour
 	bool showFpsButton = true;
 	bool showSearchText = true;
     bool showCopyButton = true;
-    bool showCopyAllButton = true;
     bool showSaveButton = true;
 
     string buildDate;
@@ -252,7 +255,6 @@ public class Reporter : MonoBehaviour
     GUIContent saveLogsContent;
 	GUIContent searchContent;
     GUIContent copyContent;
-    GUIContent copyAllContent;
     GUIContent closeContent;
 
 	GUIContent buildFromContent;
@@ -349,11 +351,14 @@ public class Reporter : MonoBehaviour
 	public bool Initialized = false;
 	public void Initialize()
 	{
+		if (Application.platform == RuntimePlatform.Android)
+			EnhancedTouchSupport.Enable();
+		
 		if (!created) {
 			try {
 				gameObject.SendMessage("OnPreStart");
 			}
-			catch (System.Exception e) {
+			catch (Exception e) {
 				Debug.LogException(e);
 			}
 #if UNITY_CHANGE3
@@ -396,7 +401,6 @@ public class Reporter : MonoBehaviour
         saveLogsContent = new GUIContent("", images.saveLogsImage, "Save logs to device");
         searchContent = new GUIContent("", images.searchImage, "Search for logs");
         copyContent = new GUIContent("", images.copyImage, "Copy log to clipboard");
-        copyAllContent = new GUIContent("", images.copyAllImage, "Copy all logs to clipboard");
         closeContent = new GUIContent("", images.closeImage, "Hide logs");
 		userContent = new GUIContent("", images.userImage, "User");
 
@@ -435,7 +439,6 @@ public class Reporter : MonoBehaviour
 		showFpsButton = (PlayerPrefs.GetInt("Reporter_showFpsButton", 1) == 1) ? true : false;
 		showSearchText = (PlayerPrefs.GetInt("Reporter_showSearchText", 1) == 1) ? true : false;
         showCopyButton = (PlayerPrefs.GetInt("Reporter_showCopyButton", 1) == 1) ? true : false;
-        showCopyAllButton = (PlayerPrefs.GetInt("Reporter_showCopyAllButton", 1) == 1) ? true : false;
         showSaveButton = (PlayerPrefs.GetInt("Reporter_showSaveButton", 1) == 1) ? true : false;
 
 
@@ -577,19 +580,19 @@ public class Reporter : MonoBehaviour
 
 		GUISkin skin = images.reporterScrollerSkin;
 
-		toolbarScrollerSkin = (GUISkin)GameObject.Instantiate(skin);
+		toolbarScrollerSkin = (GUISkin)Instantiate(skin);
 		toolbarScrollerSkin.verticalScrollbar.fixedWidth = 0f;
 		toolbarScrollerSkin.horizontalScrollbar.fixedHeight = 0f;
 		toolbarScrollerSkin.verticalScrollbarThumb.fixedWidth = 0f;
 		toolbarScrollerSkin.horizontalScrollbarThumb.fixedHeight = 0f;
 
-		logScrollerSkin = (GUISkin)GameObject.Instantiate(skin);
+		logScrollerSkin = (GUISkin)Instantiate(skin);
 		logScrollerSkin.verticalScrollbar.fixedWidth = size.x * 2f;
 		logScrollerSkin.horizontalScrollbar.fixedHeight = 0f;
 		logScrollerSkin.verticalScrollbarThumb.fixedWidth = size.x * 2f;
 		logScrollerSkin.horizontalScrollbarThumb.fixedHeight = 0f;
 
-		graphScrollerSkin = (GUISkin)GameObject.Instantiate(skin);
+		graphScrollerSkin = (GUISkin)Instantiate(skin);
 		graphScrollerSkin.verticalScrollbar.fixedWidth = 0f;
 		graphScrollerSkin.horizontalScrollbar.fixedHeight = size.x * 2f;
 		graphScrollerSkin.verticalScrollbarThumb.fixedWidth = 0f;
@@ -600,7 +603,7 @@ public class Reporter : MonoBehaviour
 
 	void Start()
 	{
-		logDate = System.DateTime.Now.ToString();
+		logDate = DateTime.Now.ToString();
 		StartCoroutine("readInfo");
 	}
 
@@ -622,7 +625,7 @@ public class Reporter : MonoBehaviour
 		logsMemUsage = 0;
 		graphMemUsage = 0;
 		samples.Clear();
-		System.GC.Collect();
+		GC.Collect();
 		selectedLog = null;
 	}
 
@@ -735,7 +738,6 @@ public class Reporter : MonoBehaviour
 	Vector2 oldInfoDrag;
 	void DrawInfo()
 	{
-
 		GUILayout.BeginArea(screenRect, backStyle);
 
 		Vector2 drag = getDrag();
@@ -827,7 +829,7 @@ public class Reporter : MonoBehaviour
 		GUILayout.Space(size.x);
 		GUILayout.Box(dateContent, nonStyle, GUILayout.Width(size.x), GUILayout.Height(size.y));
 		GUILayout.Space(size.x);
-		GUILayout.Label(System.DateTime.Now.ToString(), nonStyle, GUILayout.Height(size.y));
+		GUILayout.Label(DateTime.Now.ToString(), nonStyle, GUILayout.Height(size.y));
 		GUILayout.Label(" - Application Started At " + logDate, nonStyle, GUILayout.Height(size.y));
 		GUILayout.FlexibleSpace();
 		GUILayout.EndHorizontal();
@@ -962,10 +964,6 @@ public class Reporter : MonoBehaviour
         {
             showCopyButton = !showCopyButton;
         }
-        if (GUILayout.Button(copyAllContent, (showCopyAllButton) ? buttonActiveStyle : barStyle, GUILayout.Width(size.x * 2), GUILayout.Height(size.y * 2)))
-        {
-            showCopyAllButton = !showCopyAllButton;
-        }
         if (GUILayout.Button(saveLogsContent, (showSaveButton) ? buttonActiveStyle : barStyle, GUILayout.Width(size.x * 2), GUILayout.Height(size.y * 2)))
         {
             showSaveButton = !showSaveButton;
@@ -1095,21 +1093,7 @@ public class Reporter : MonoBehaviour
                 if (selectedLog == null)
                     GUIUtility.systemCopyBuffer = "No log selected";
                 else
-                    GUIUtility.systemCopyBuffer = selectedLog.condition + System.Environment.NewLine + System.Environment.NewLine  + selectedLog.stacktrace;
-            }
-        }
-
-        if (showCopyAllButton)
-        {
-            if (GUILayout.Button(copyAllContent, barStyle, GUILayout.Width(size.x * 2), GUILayout.Height(size.y * 2)))
-            {
-                string allLogsToClipboard = string.Empty;
-                logs.ForEach(l => allLogsToClipboard += l.condition + System.Environment.NewLine + System.Environment.NewLine + l.stacktrace);
-
-                if(string.IsNullOrWhiteSpace(allLogsToClipboard))
-                    GUIUtility.systemCopyBuffer = "No log selected";
-                else
-                    GUIUtility.systemCopyBuffer = allLogsToClipboard;
+                    GUIUtility.systemCopyBuffer = selectedLog.condition + Environment.NewLine + Environment.NewLine  + selectedLog.stacktrace;
             }
         }
 
@@ -1191,7 +1175,7 @@ public class Reporter : MonoBehaviour
 			try {
 				gameObject.SendMessage("OnHideReporter");
 			}
-			catch (System.Exception e) {
+			catch (Exception e) {
 				Debug.LogException(e);
 			}
 		}
@@ -1569,7 +1553,7 @@ public class Reporter : MonoBehaviour
 			try {
 				selectedSample = samples[selectedLog.sampleId];
 			}
-			catch (System.Exception e) {
+			catch (Exception e) {
 				Debug.LogException(e);
 			}
 
@@ -1670,32 +1654,43 @@ public class Reporter : MonoBehaviour
 	Vector2 gestureSum = Vector2.zero;
 	float gestureLength = 0;
 	int gestureCount = 0;
+	
 	bool isGestureDone()
 	{
 		if (Application.platform == RuntimePlatform.Android ||
 			Application.platform == RuntimePlatform.IPhonePlayer) {
-			if (Input.touches.Length != 1) {
+			//if (Input.touches.Length != 1)
+			if (Touch.activeTouches.Count != 1)
+			{
 				gestureDetector.Clear();
 				gestureCount = 0;
 			}
 			else {
-				if (Input.touches[0].phase == TouchPhase.Canceled || Input.touches[0].phase == TouchPhase.Ended)
+				//if (Input.touches[0].phase == TouchPhase.Canceled || Input.touches[0].phase == TouchPhase.Ended)
+				var phase = Touch.activeTouches[0].phase;
+				if (phase == TouchPhase.Canceled || phase == TouchPhase.Ended)
 					gestureDetector.Clear();
-				else if (Input.touches[0].phase == TouchPhase.Moved) {
-					Vector2 p = Input.touches[0].position;
+				else if (phase ==  TouchPhase.Moved) {
+					//Vector2 p = Input.touches[0].position;
+					var p = Touch.activeTouches[0].screenPosition;
 					if (gestureDetector.Count == 0 || (p - gestureDetector[gestureDetector.Count - 1]).magnitude > 10)
 						gestureDetector.Add(p);
 				}
 			}
 		}
 		else {
-			if (Input.GetMouseButtonUp(0)) {
+			// if (Input.GetMouseButtonUp(0))
+			if (Mouse.current.leftButton.wasReleasedThisFrame)
+			{
 				gestureDetector.Clear();
 				gestureCount = 0;
 			}
 			else {
-				if (Input.GetMouseButton(0)) {
-					Vector2 p = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+				// if (Input.GetMouseButton(0))
+				if (Mouse.current.leftButton.isPressed)
+				{
+					//Vector2 p = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+					Vector2 p = Mouse.current.position.value;
 					if (gestureDetector.Count == 0 || (p - gestureDetector[gestureDetector.Count - 1]).magnitude > 10)
 						gestureDetector.Add(p);
 				}
@@ -1742,11 +1737,15 @@ public class Reporter : MonoBehaviour
 	{
 		if (Application.platform == RuntimePlatform.Android ||
 		   Application.platform == RuntimePlatform.IPhonePlayer) {
-			if (Input.touches.Length != 1) {
+			// if (Input.touches.Length != 1)
+			if (Touch.activeTouches.Count != 1)
+			{
 				lastClickTime = -1;
 			}
 			else {
-				if (Input.touches[0].phase == TouchPhase.Began) {
+				//if (Input.touches[0].phase == TouchPhase.Began)
+				if (Touch.activeTouches[0].phase == TouchPhase.Began)
+				{
 					if (lastClickTime == -1)
 						lastClickTime = Time.realtimeSinceStartup;
 					else if (Time.realtimeSinceStartup - lastClickTime < 0.2f) {
@@ -1760,7 +1759,9 @@ public class Reporter : MonoBehaviour
 			}
 		}
 		else {
-			if (Input.GetMouseButtonDown(0)) {
+			//if (Input.GetMouseButtonDown(0))
+			if (Mouse.current.leftButton.wasPressedThisFrame)
+			{
 				if (lastClickTime == -1)
 					lastClickTime = Time.realtimeSinceStartup;
 				else if (Time.realtimeSinceStartup - lastClickTime < 0.2f) {
@@ -1782,40 +1783,54 @@ public class Reporter : MonoBehaviour
 	Vector2 getDownPos()
 	{
 		if (Application.platform == RuntimePlatform.Android ||
-		   Application.platform == RuntimePlatform.IPhonePlayer) {
-
-			if (Input.touches.Length == 1 && Input.touches[0].phase == TouchPhase.Began) {
-				downPos = Input.touches[0].position;
+		   Application.platform == RuntimePlatform.IPhonePlayer)
+		{
+			//if (Input.touches.Length == 1 && Input.touches[0].phase == TouchPhase.Began)
+			if (Touch.activeTouches.Count == 1 && Touch.activeTouches[0].phase == TouchPhase.Began)
+			{
+				//downPos = Input.touches[0].position;
+				downPos = Touch.activeTouches[0].screenPosition;
 				return downPos;
 			}
 		}
 		else {
-			if (Input.GetMouseButtonDown(0)) {
-				downPos.x = Input.mousePosition.x;
-				downPos.y = Input.mousePosition.y;
+			//if (Input.GetMouseButtonDown(0))
+			if (Mouse.current.leftButton.wasPressedThisFrame)
+			{
+				// downPos.x = Input.mousePosition.x;
+				// downPos.y = Input.mousePosition.y;
+				// return downPos;
+				downPos = Mouse.current.position.value;
 				return downPos;
 			}
 		}
 
 		return Vector2.zero;
 	}
+	
 	//calculate drag amount , this is used for scrolling
-
 	Vector2 mousePosition;
 	Vector2 getDrag()
 	{
 
 		if (Application.platform == RuntimePlatform.Android ||
 			Application.platform == RuntimePlatform.IPhonePlayer) {
-			if (Input.touches.Length != 1) {
+			//if (Input.touches.Length != 1)
+			if (Touch.activeTouches.Count != 1)
+			{
 				return Vector2.zero;
 			}
-			return Input.touches[0].position - downPos;
+			//return Input.touches[0].position - downPos;
+			return Touch.activeTouches[0].screenPosition - downPos;
 		}
 		else {
-			if (Input.GetMouseButton(0)) {
-				mousePosition = Input.mousePosition;
-				return mousePosition - downPos;
+			// if (Input.GetMouseButton(0))
+			if (Mouse.current.leftButton.isPressed)
+			{
+				//mousePosition = Input.mousePosition;
+				mousePosition = Mouse.current.position.value;
+				//return mousePosition - downPos;
+				return mousePosition - getDownPos();
 			}
 			else {
 				return Vector2.zero;
@@ -1851,7 +1866,7 @@ public class Reporter : MonoBehaviour
 		try {
 			gameObject.SendMessage("OnShowReporter");
 		}
-		catch (System.Exception e) {
+		catch (Exception e) {
 			Debug.LogException(e);
 		}
 	}
@@ -1859,7 +1874,7 @@ public class Reporter : MonoBehaviour
 	void Update()
 	{
 		fpsText = fps.ToString("0.000");
-		gcTotalMemory = (((float)System.GC.GetTotalMemory(false)) / 1024 / 1024);
+		gcTotalMemory = (((float)GC.GetTotalMemory(false)) / 1024 / 1024);
 		//addSample();
 
 #if UNITY_CHANGE3
@@ -1931,7 +1946,7 @@ public class Reporter : MonoBehaviour
 			_condition = condition;
 			cachedString.Add(_condition, _condition);
 			memUsage += (string.IsNullOrEmpty(_condition) ? 0 : _condition.Length * sizeof(char));
-			memUsage += System.IntPtr.Size;
+			memUsage += IntPtr.Size;
 		}
 		string _stacktrace = "";
 		if (cachedString.ContainsKey(stacktrace)) {
@@ -1941,7 +1956,7 @@ public class Reporter : MonoBehaviour
 			_stacktrace = stacktrace;
 			cachedString.Add(_stacktrace, _stacktrace);
 			memUsage += (string.IsNullOrEmpty(_stacktrace) ? 0 : _stacktrace.Length * sizeof(char));
-			memUsage += System.IntPtr.Size;
+			memUsage += IntPtr.Size;
 		}
 		bool newLogAdded = false;
 
@@ -2018,7 +2033,7 @@ public class Reporter : MonoBehaviour
 		try {
 			gameObject.SendMessage("OnLog", log);
 		}
-		catch (System.Exception e) {
+		catch (Exception e) {
 			Debug.LogException(e);
 		}
 	}
@@ -2097,7 +2112,7 @@ public class Reporter : MonoBehaviour
 			string streamingAssetsPath = Application.streamingAssetsPath;
 			if (streamingAssetsPath == "")
 				streamingAssetsPath = Application.dataPath + "/StreamingAssets/";
-			url = System.IO.Path.Combine(streamingAssetsPath, prefFile);
+			url = Path.Combine(streamingAssetsPath, prefFile);
 		}
 
 		//if (Application.platform != RuntimePlatform.OSXWebPlayer && Application.platform != RuntimePlatform.WindowsWebPlayer)
@@ -2141,5 +2156,3 @@ public class Reporter : MonoBehaviour
         File.WriteAllLines(filePath, fileContentsList.ToArray());
     }
 }
-
-
