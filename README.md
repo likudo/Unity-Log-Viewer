@@ -15,14 +15,14 @@ https://www.assetstore.unity3d.com/en/#!/content/12047
     1 - create reporter from menu (Reporter->Create) at first scene your game start.
     2 - then set the ” Scrip execution order ” in (Edit -> Project Settings ) of Reporter.cs to be the highest.
 
-
+### Version 1.9
+    - Migrated to New Input System 
     
-     
 ### Version 1.8
     - Add Copy to clipboard.
-	- Merge Fix for Unity 2019.
-	- Fix ReporterModificationProcessor is annoying.
-	- Fix waste ram.
+    - Merge Fix for Unity 2019.
+    - Fix ReporterModificationProcessor is annoying.
+    - Fix waste ram.
     
 ### Version 1.7
     - Add Save logs button( thanks for Ahmed Shbli ).
@@ -31,10 +31,4 @@ https://www.assetstore.unity3d.com/en/#!/content/12047
     - Fix loading scene from asset bundle error.
 
 
-
-    
-    
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=J9MX5C6Q7B2NY">
-    <img src="https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_cc_147x47.png">
-    </img>
-</a>
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/r35tm)
