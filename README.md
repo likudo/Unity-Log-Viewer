@@ -16,7 +16,8 @@ https://www.assetstore.unity3d.com/en/#!/content/12047
     2 - then set the ” Scrip execution order ” in (Edit -> Project Settings ) of Reporter.cs to be the highest.
 
 ### Version 1.9
-    - Migrated to New Input System 
+    - Migrated to New Input System
+    - Availability of installation via Package Manager
     
 ### Version 1.8
     - Add Copy to clipboard.
