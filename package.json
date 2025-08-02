@@ -1,6 +1,6 @@
 {
     "name": "com.r35.unitylogviewer",
-    "version": "1.9",
+    "version": "1.9.0",
     "displayName": "Unity Log Viewer",
     "description": "Using this tool, you can easily check your editor console logs inside the game itself! All you have to do is make a circle gesture using your mouse (click and drag) or your finger (touch and drag) on the mobile screen to show all these logs!",
     "unity": "6000.1",
